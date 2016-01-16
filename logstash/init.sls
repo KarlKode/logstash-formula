@@ -1,11 +1,19 @@
 {%- from 'logstash/map.jinja' import logstash with context %}
 
+{% if logstash.version.startswith('2') %}
+{% set versionstring="1:" + logstash.version %}
+{% else %}
+{% set versionstring = logstash.version %}
+{% endif %}
+
 include:
   - .repo
+  - .plugin
 
 logstash-pkg:
-  pkg.{{logstash.pkgstate}}:
+  pkg.{{ logstash.pkgstate }}:
     - name: {{logstash.pkg}}
+    - version: {{ versionstring }}
     - require:
       - pkgrepo: logstash-repo
 
@@ -56,9 +64,28 @@ logstash-config:
     - name: {{logstash.conf_dir}}
     - clean: True
 
+{% if logstash.env is defined %}
+logstash-env:
+  file.managed:
+    - name: /etc/default/logstash
+    - mode: 664
+    - user: root
+    - group: root
+    - source: salt://logstash/files/default
+    - template: jinja
+    - require:
+      - pkg: logstash-pkg
+    - defaults:
+      config: {{ logstash.env | json }}
+{% endif %}
+
 logstash-svc:
   service.running:
     - name: {{logstash.svc}}
     - enable: true
     - watch:
       - file: logstash-config
+{% if logstash.env is defined %}
+      - file: logstash-env
+{% endif %}
+
