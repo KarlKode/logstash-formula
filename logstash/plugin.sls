@@ -10,9 +10,6 @@ logstash_plugin_{{ plugin.name }}:
     - require:
       - pkg: logstash
 {% endfor %}
-{% endif %}
-{% endif %}
-
 extend:
   logstash:
     service:
@@ -20,3 +17,6 @@ extend:
 {% for plugin in logstash.plugin_install %}
         - cmd: logstash_plugin_{{ plugin.name }}
 {% endfor %}
+{% endif %}
+{% endif %}
+

@@ -1,19 +1,16 @@
 {%- from 'logstash/map.jinja' import logstash with context %}
-
-{% if logstash.version.startswith('2') %}
-{% set versionstring="1:" + logstash.version %}
-{% else %}
-{% set versionstring = logstash.version %}
-{% endif %}
+{%- from 'logstash/map.jinja' import logstash_conf with context %}
 
 include:
   - .repo
   - .plugin
 
+
+
 logstash-pkg:
   pkg.{{ logstash.pkgstate }}:
     - name: {{logstash.pkg}}
-    - version: {{ versionstring }}
+#    - version: {{ logstash.version }}
     - require:
       - pkgrepo: logstash-repo
 
@@ -41,7 +38,7 @@ add adm group to logstash service account:
       - pkg: logstash-pkg
 {%- endif %}
 
-{%- for conf_name in logstash.conf.keys() %}
+{%- for conf_name in logstash_conf.keys() %}
 {{'/'.join([logstash.conf_dir, conf_name + '.conf'])}}:
   file.managed:
     - user: root
